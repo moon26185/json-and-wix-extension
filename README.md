@@ -1,1 +1,0 @@
-# json-and-wix-extension
