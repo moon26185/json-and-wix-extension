@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email Processor Side Panel</title>
+    <style>
+        body {
+            width: 320px;
+            padding: 0;
+            margin: 0;
+            font-family: 'Inter', 'Arial', sans-serif;
+            background-color: #0d0824;
+            color: #ca8b04;
+            overflow: hidden;
+        }
+        
+        /* Header with minimize button */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: linear-gradient(135deg, #690177, #470250);
+            user-select: none;
+        }
+        
+        .header h3 {
+            margin: 0;
+            font-size: 14px;
+            color: #f8ea22;
+        }
+        
+        .minimize-btn {
+            background: none;
+            border: none;
+            color: #f8ea22;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+        
+        .minimize-btn:hover {
+            background: rgba(248, 234, 34, 0.2);
+        }
+        
+        /* Content area */
+        .content {
+            padding: 10px;
+            max-height: calc(100vh - 44px);
+            overflow-y: auto;
+            transition: max-height 0.3s ease;
+        }
+        
+        .content.minimized {
+            max-height: 0;
+            overflow: hidden;
+            padding: 0;
+        }
+        
+        textarea {
+            width: 95%;
+            height: 150px;
+            margin-bottom: 10px;
+            background-color: #17002c;
+            color: #fff;
+            border: 1px solid #470250;
+            padding: 8px;
+            border-radius: 5px;
+            resize: none;
+        }
+        .counts {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .counts div {
+            flex: 1;
+            text-align: center;
+        }
+        button {
+            flex: 1;
+            margin: 3px;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            background-color: #690177;
+            color: #fff;
+            transition: background 0.3s ease;
+        }
+        button:hover {
+            background-color: #f8ea22;
+            color: #000000;
+        }
+        button:disabled {
+            background-color: #ac3303;
+            cursor: not-allowed;
+        }
+        .button-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+        .delay-controls {
+            margin-bottom: 10px;
+        }
+        .delay-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2px 0;
+            font-size: 11px;
+            font-family: 'Inter', 'Arial', sans-serif;
+            transition: background 0.2s ease;
+        }
+
+        .delay-row:hover {
+            background-color: #1a1a1a;
+            border-radius: 4px;
+        }
+
+        .delay-row label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-right: 3px;
+            padding: 2px;
+            transition: transform 0.2s ease;
+        }
+
+        .delay-row label:hover {
+            transform: scale(1.02);
+        }
+
+        .delay-controls input,
+        .delay-controls select {
+            width: 60px;
+            background-color: #f8ea22a6;
+            color: #000000;
+            border: 1px solid #333;
+            padding: 2px;
+            border-radius: 3px;
+            font-size: 11px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .delay-controls input:hover,
+        .delay-controls select:hover {
+            border-color: #555;
+        }
+
+        .delay-controls input:focus,
+        .delay-controls select:focus {
+            outline: none;
+            border-color: #666;
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
+        }
+        select {
+            background-color: #1e1e1e;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 4px;
+            border-radius: 3px;
+            margin: 5px;
+            width: 95%;
+        }
+        .tab-selection {
+            max-height: 100px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            border: 1px solid #333;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .tab-selection label {
+            display: block;
+            margin: 5px 0;
+        }
+        #console {
+            width: 95%;
+            height: 300px;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            font-size: 12px;
+            padding: 8px;
+            border-radius: 5px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            margin-top: 10px;
+        }
+        #console .sent {
+            color: green;
+        }
+        #console .attempt3 {
+            color: orange;
+        }
+        #console .no-emails {
+            color: cyan;
+        }
+        #reloadBtn {
+            flex: none;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #333;
+            border-radius: 6px;
+            font-size: 18px;
+            margin-left: 10px;
+            transition: background 0.3s ease;
+        }
+        #reloadBtn::before {
+            content: "R";
+            display: inline-block;
+            transition: transform 0.6s ease-in-out;
+        }
+        #reloadBtn:hover::before {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Scrollbar styling */
+        .content::-webkit-scrollbar,
+        #console::-webkit-scrollbar,
+        .tab-selection::-webkit-scrollbar,
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .content::-webkit-scrollbar-thumb,
+        #console::-webkit-scrollbar-thumb,
+        .tab-selection::-webkit-scrollbar-thumb,
+        textarea::-webkit-scrollbar-thumb {
+            background: #690177;
+            border-radius: 4px;
+        }
+        
+        .content::-webkit-scrollbar-track,
+        #console::-webkit-scrollbar-track,
+        .tab-selection::-webkit-scrollbar-track,
+        textarea::-webkit-scrollbar-track {
+            background: #17002c;
+        }
+    </style>
+</head>
+<body>
+    <div class="header" id="headerToggle">
+        <h3>WiX Data Processor</h3>
+        <button class="minimize-btn" id="minimizeBtn" title="Minimize/Expand">minimize soft</button>
+    </div>
+    
+    <div class="content" id="mainContent">
+        <textarea id="emails" placeholder="Enter emails..."></textarea>
+        <div class="counts">
+            <div id="lineCount">Email Lines: 0</div>
+            <div id="failedCount">Failed Emails: 0</div>
+            <div id="sentCount">Sent Emails: 0</div>
+        </div>
+        <div class="tab-selection">
+            <label><input type="checkbox" id="selectAll"> Select all Tabs</label>
+            <div id="tabList"></div>
+        </div>
+        <div class="delay-controls">
+            <div class="delay-row">
+                <label>Delay (ms): <input type="number" id="delay" value="500" min="0"></label>
+                <label>Attempt Delay: <input type="number" id="attemptDelay" value="4000" min="0"></label>
+            </div>
+            <div class="delay-row">
+                <label>Skip/Attempts: 
+                    <select id="skipAttempts">
+                        <option value="false">All Attempts</option>
+                        <option value="true">Skip 2nd/3rd</option>
+                    </select>
+                </label>
+                <label>Skip Delay: <input type="number" id="failedDelay" value="1000" min="0"></label>
+            </div>
+            <div class="delay-row">
+                <label>Attempt Reload: 
+                    <select id="reloadOption">
+                        <option value="after3">3 Attempt</option>
+                        <option value="none">No Reload</option>
+                        <option value="after2">2 Attempt</option>
+                    </select>
+                </label>
+                <label>Stall: 
+                    <select id="stallDetection">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </label>
+            </div>
+            <div class="delay-row">
+                <label>Reload After Sent: 
+                    <input type="number" id="reloadAfterSent" value="0" min="0" placeholder="Emails">
+                </label>
+                <label>Switch Tabs: 
+                    <select id="autoSwitch">
+                        <option value="false">No</option>
+                        <option value="true">Yes</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+        <div class="button-row">
+            <button id="startBtn">Start Process</button>
+            <button id="stopBtn" disabled>Stop Process</button>
+            <button id="reloadBtn" title="Reload"></button>
+        </div>
+        <div class="button-row">
+            <button id="downloadFailedBtn">Download Failed Emails</button>
+            <button id="downloadSentBtn">Download Sent Emails</button>
+        </div>
+        <div id="console"></div>
+    </div>
+    
+    <script src="sidepanel.js"></script>
+</body>
+</html>
